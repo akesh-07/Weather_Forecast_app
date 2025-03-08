@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:weather_app/secrets.dart';
 import 'additional_info.dart';
 import 'hourly_forecast.dart';
@@ -65,7 +66,12 @@ class _weather_pageState extends State<weather_page> {
             print(snapshot.error.toString());
           }
           final data = snapshot.data!;
-          final currenttemp = data['list'][0]['main']['temp'];
+          final currentweatherdata = data['list'][0];
+          final currenttemp = currentweatherdata['main']['temp'];
+          final currentsky = currentweatherdata['weather'][0]['main'];
+          final pressure = currentweatherdata['main']['pressure'];
+          final windspeed = currentweatherdata['wind']['speed'];
+          final humidity = currentweatherdata['main']['humidity'];
           return Padding(
               padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -91,14 +97,14 @@ class _weather_pageState extends State<weather_page> {
                           ),
                         ),
                          const SizedBox(height: 10),
-                         const Icon(
-                          Icons.cloud,
+                          Icon(
+                          currentsky=='Clouds' || currentsky=='Rain'?Icons.cloud:Icons.sunny,
                           size: 64,
                         ),
                          const SizedBox(height: 10),
-                         const Text(
-                          'Rain',
-                          style: TextStyle(
+                          Text(
+                          currentsky,
+                          style: const TextStyle(
                             fontSize: 16,
                           ),
                         ),
@@ -120,31 +126,51 @@ class _weather_pageState extends State<weather_page> {
               const SizedBox(
                 height: 8,
               ),
-             const  SingleChildScrollView(
-               scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    HourlyForecast(icon: Icons.sunny,time: '13:00',temperature: '303'),
-                    HourlyForecast(icon: Icons.cloud, time: '14:00',temperature: '305'),
-                    HourlyForecast(icon: Icons.air,time: '15:00',temperature: '301'),
-                    HourlyForecast(icon: Icons.sunny,time: '16:00',temperature: '308'),
-                  ],
-                ),
+             // const  SingleChildScrollView(
+             //   scrollDirection: Axis.horizontal,
+             //    child: Row(
+             //      children: [
+             //        HourlyForecast(icon: Icons.sunny,time: '13:00',temperature: '303'),
+             //        HourlyForecast(icon: Icons.cloud, time: '14:00',temperature: '305'),
+             //        HourlyForecast(icon: Icons.air,time: '15:00',temperature: '301'),
+             //        HourlyForecast(icon: Icons.sunny,time: '16:00',temperature: '308'),
+             //      ],
+             //    ),
+             //  ),
+            SizedBox(
+              height: 120,
+              child: ListView.builder(
+                itemCount: 5,
+                scrollDirection: Axis.horizontal,
+                itemBuilder: (context, index) {
+                  final hourlyforecast = data['list'][index + 1];
+                  final hourlysky = hourlyforecast['weather'][0]['main'];
+                  final hourlytemp = hourlyforecast['main']['temp'].toString();
+                  final time = DateTime.parse(hourlyforecast['dt_txt']); // Fixed key
+
+                  return HourlyForecast(
+                    time: DateFormat.Hm().format(time),
+                    temperature: hourlytemp,
+                    icon: hourlysky == 'Clouds' || hourlysky == 'Rain' ? Icons.cloud : Icons.sunny,
+                  );
+                },
               ),
-              const SizedBox(height: 10,),
-              const Text('Additional Information',style: TextStyle(
+            ),
+            const SizedBox(height: 10,), // Ensure this is correctly placed
+
+            const Text('Additional Information',style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),),
               const SizedBox(height: 8,),
-              const Row(
+               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
 
 
-                    additional_info(icon: Icons.water_drop,label: 'Humidity',value: '91',),
-                    additional_info(icon: Icons.air,label: 'Wind Speed',value: '7.5',),
-                    additional_info(icon: Icons.beach_access,label: 'Pressure',value: '1000',),
+                    additional_info(icon: Icons.water_drop,label: 'Humidity',value: humidity.toString(),),
+                    additional_info(icon: Icons.air,label: 'Wind Speed',value: windspeed.toString(),),
+                    additional_info(icon: Icons.beach_access,label: 'Pressure',value: pressure.toString(),),
 
                 ],
               )
