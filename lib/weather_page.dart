@@ -14,7 +14,7 @@ class weather_page extends StatefulWidget {
 }
 
 class _weather_pageState extends State<weather_page> {
-
+  late Future<Map<String,dynamic>> weather;
   Future<Map<String,dynamic>> getcurrentweather() async
   {
     try
@@ -39,7 +39,7 @@ class _weather_pageState extends State<weather_page> {
   @override
   void initState() {
     super.initState();
-    getcurrentweather();
+    weather=getcurrentweather();
 
   }
   @override
@@ -54,10 +54,14 @@ class _weather_pageState extends State<weather_page> {
           ),
         ),
         centerTitle: true,
-        actions: [IconButton(onPressed: () {}, icon: const Icon(Icons.refresh))],
+        actions: [IconButton(onPressed: () {
+          setState(() {
+            weather = getcurrentweather();
+          });
+        }, icon: const Icon(Icons.refresh))],
       ),
       body: FutureBuilder(
-        future: getcurrentweather(),
+        future: weather,
         builder: (context,snapshot) {
           if(snapshot.connectionState==ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator.adaptive());
